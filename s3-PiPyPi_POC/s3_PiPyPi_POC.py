@@ -40,31 +40,35 @@ def OpenSerial():
 def CloseSerial():
     if Serial.isOpen():
         Serial.close()
-    Thread(target=ReadSerial).start()
+    Thread(target=ReadSerial)._Thread__stop()
 
 def Test1():
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Test1"}, separators=(',',':') )
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Test1"} )
     #print j
-    Serial.write(j)
-    Serial.write("\n")
-
-def EscEna():
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : "On"}, separators=(',',':') )
-    #print j
-    Serial.write(j)
-    Serial.write("\n")
-
-def EscDis():
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : "Off"}, separators=(',',':') )
-    #print j
-    Serial.write(j)
-    Serial.write("\n")
+    Serial.write(j + "\n")
 
 def SendGeom():
-    #j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Geom", "WheelBase" : 140.00})
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Geom", "WheelBase" : 140.00, "TicksPerRevo" : 60, "WheelBase" : 120})
     #print j
-    #Serial.write(j)
-    pass
+    Serial.write(j + "\n")
+    
+def SetPose():
+    j = ""
+    c = Choice(["On", "Off"])
+    if  c == '1':
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Pose", "Value" : "On"})
+    elif c == '2':
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Pose", "Value" : "Off"})    
+    Serial.write(j + "\n")
+    
+def SetEsc():
+    j = ""
+    c = Choice(["On", "Off"])
+    if  c == '1':
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : "On"})
+    elif c == '2':
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : "Off"})
+    Serial.write(j + "\n")
     
 def M1Sweep():
     # enable esc
@@ -74,34 +78,57 @@ def M1Sweep():
     # disable esc
     pass
 
-MainMenuMenu = {
-    '1' : OpenSerial,
-    '2' : Test1,
-    '3' : EscEna,
-    '4' : EscDis,
-    '7' : SendGeom,
-    '8' : M1Sweep,
-    '9' : CloseSerial,
-    }
+def Choice(a):
+    for i in xrange(len(a)):
+        print str(i+1) + ")", a[i]        
+    k = getch()
+    print(Fore.WHITE + Back.BLUE + a[int(k)-1] + Fore.RESET + Back.RESET)
+    return k
 
-def MainMenu():
+def RunMenu(menu):
     while True:
-        for m in sorted(MainMenuMenu):
-            print m + ")", MainMenuMenu[m].func_name
+        for m in sorted(menu):
+            print m + ")", menu[m].func_name
         print( "0) Exit")        
         k = getch()
         if k == '0':
-            closing = True
-            print(Fore.WHITE + Back.MAGENTA + "Exit" + Fore.RESET + Back.RESET)
-            if Serial.isOpen():
-                Serial.close()
+            print(Fore.WHITE + Back.YELLOW + "Exit" + Fore.RESET + Back.RESET)
             return
+        print
         print(Fore.WHITE + Back.GREEN + MainMenuMenu[k].func_name + Fore.RESET + Back.RESET)
-        MainMenuMenu[k]()
+        menu[k]()
+        print
+
+def PoseMenu():
+    RunMenu(PoseMenuMenu)
+
+def MotorMenu():
+    RunMenu(MotorMenuMenu);
+
+PoseMenuMenu = {
+    '1' : SetPose,
+    }
+
+MotorMenuMenu = {
+    '1' : SetEsc,
+    '3' : M1Sweep
+    }
+
+MainMenuMenu = {
+    '1' : OpenSerial,
+    '2' : Test1,
+    '3' : PoseMenu,
+    '4' : MotorMenu,
+    '7' : SendGeom,
+    '9' : CloseSerial,
+    }
 
 
 getch = _find_getch()
 init()  # colorama
 print(Fore.WHITE + Back.GREEN + "Python Pilot Test Suite .1" + Fore.RESET + Back.RESET + Style.RESET_ALL)
-MainMenu()
+RunMenu(MainMenuMenu)
+closing = True
+if Serial.isOpen():
+    Serial.close()
 
