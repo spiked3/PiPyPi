@@ -2,7 +2,9 @@ from colorama import Fore, Back, Style, init
 from threading import Thread
 import serial, time, json
 
-Serial = serial.Serial("com4", 115200)
+Serial = serial.Serial("/dev/ttyUSB0", 115200)	# *nix
+#Serial = serial.Serial("com4", 115200)		# windows
+
 closing = False
 
 def _find_getch():
@@ -29,7 +31,7 @@ def _find_getch():
 
 def ReadSerial():
     while Serial.isOpen() and not closing:
-        print(Serial.readline()),
+        print(Serial.readline())
 
 def OpenSerial():
     if Serial.isOpen():
