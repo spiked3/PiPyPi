@@ -2,7 +2,7 @@ from colorama import Fore, Back, Style, init
 from threading import Thread
 import serial, time, json
 
-Serial = serial.Serial("com4", 9600)
+Serial = serial.Serial("com4", 115200)
 closing = False
 
 def _find_getch():
@@ -54,29 +54,27 @@ def SendGeom():
     
 def SetPose():
     j = ""
-    c = Choice(["On", "Off"])
-    if  c == '1':
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Pose", "Value" : "On"})
-    elif c == '2':
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Pose", "Value" : "Off"})    
+    c = int(Choice(["Off", "On"])) - 1
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Pose", "Value" : c})
     Serial.write(j + "\n")
     
 def SetEsc():
     j = ""
-    c = Choice(["On", "Off"])
-    if  c == '1':
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : "On"})
-    elif c == '2':
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : "Off"})
+    c = int(Choice(["Off", "On"])) - 1
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : c})
+    # print j
     Serial.write(j + "\n")
     
 def M1Sweep():
     # enable esc
-    # for i=0 to 80 step
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 1})
+    Serial.write(j + "\n")
+    # for i=0 to 80 step 10
     # for i = 80 to -80 step -10
-    # for i = -80 tp 0 step 10
+    # for i = -80 tp 0 step 10    
     # disable esc
-    pass
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 0})
+    Serial.write(j + "\n")
 
 def Choice(a):
     for i in xrange(len(a)):
