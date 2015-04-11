@@ -6,7 +6,8 @@ import serial, time, json
 if os.name == "posix":
     Serial = serial.Serial("/dev/ttyUSB0", 115200)	# *nix
 else:
-    Serial = serial.Serial("com4", 115200)		# windows
+    Serial = serial.Serial("com4", 115200, rtscts=0)		# windows->ard
+#    Serial = serial.Serial("com13", 115200)		# windows->ftdi
 
 closing = False
 
@@ -32,15 +33,9 @@ def _find_getch():
 
     return _getch
 
-def varname(p):
-  for line in inspect.getframeinfo(inspect.currentframe().f_back)[3]:
-    m = re.search(r'\bvarname\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)', line)
-    if m:
-      return m.group(1)
-
 def ReadSerial():
     while Serial.isOpen() and not closing:
-        print(Serial.readline())
+        print "com->" + Serial.readline(),
 
 def OpenSerial():
     if Serial.isOpen():
@@ -53,56 +48,100 @@ def CloseSerial():
         Serial.close()
     Thread(target=ReadSerial)._Thread__stop()
 
+def printj(j):
+    print "com<-" + str(j)
+
 def Test1():
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Test1"} )
-    #print j
+    printj(j)
     Serial.write(j + "\n")
 
 def Heartbeat():
-    i = GetChoice([ "On 500", "On 1000", "Off" ])
+    print "Heartbeat"
+    i = GetChoice([  "Off", "On 500", "On 1000", "On 5000", "On 20000" ])
     if i == 1:
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "HB" : 1, "Int" : 500} )
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Heartbeat", "Value" :  1, "Int" : 500} )
     elif i == 2:
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "HB" : 1, "Int" : 500} )
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Heartbeat", "Value" :  1, "Int" : 1000} )
+    elif i == 3:
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Heartbeat", "Value" :  1, "Int" : 5000} )
+    elif i == 4:
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Heartbeat", "Value" :  1, "Int" : 20000} )
     else:
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "HB" : 0} )
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Heartbeat", "Value" :  0} )
 
-    print j
+    printj(j)
+    Serial.write(j + "\n")
+
+def Pid1():
+    print "PID1"
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "PID1",
+                    "P" :  123.456, "I" :  123.456, "D" :  123.456 })
+    printj(j)
+    Serial.write(j + "\n")
+
+def MotorMax():
+    print "MotorMax"
+    c = GetChoice(["20","40","60","80","100"])
+    if c == 5:
+        p = 100
+    else:
+        p = (c + 1) * 20
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "MMax", "Value" : p })
+    printj(j)
     Serial.write(j + "\n")
 
 def SendGeom():
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Geom", "WheelBase" : 140.00, "TicksPerRevo" : 60, "WheelBase" : 120})
-    #print j
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Geom", "WB" : 140.00, "TPR" : 60, "WD" : 120.00})
+    printj(j)
     Serial.write(j + "\n")
     
 def SetPose():
-    j = ""
-    c = OnOff()
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Pose", "Value" : c})
-    Serial.write(j + "\n")
+    #j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Pose", "Value" : c})
+    #Serial.write(j + "\n")
+    pass
     
 def SetEsc():
-    j = ""
-    c = OnOff()
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : c})
-    # print j
+    i = GetChoice([ "On", "Off" ])
+    if i == 0:
+        o = 1
+    else:
+        o = 0
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : o})
+    printj(j)
     Serial.write(j + "\n")
     
 def M1Sweep():
     # enable esc
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 1})
     Serial.write(j + "\n")
-    # for i=0 to 80 step 10
-    # for i = 80 to -80 step -10
-    # for i = -80 tp 0 step 10    
+    for p in xrange(0,100,10):
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : p})
+        printj(j)
+        Serial.write(j + "\n")
+        time.sleep(.1)
+
+    for p in xrange(100,-100,-10):
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : p})
+        printj(j)
+        Serial.write(j + "\n")
+        time.sleep(.1)
+
+    for p in xrange(-100,0,10):
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : p})
+        printj(j)
+        Serial.write(j + "\n")
+        time.sleep(.1)
+
     # disable esc
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 0})
+    printj(j)
     Serial.write(j + "\n")
 
 def GetChoice(choices):
     for i in xrange(len(choices)):
-        print str(i+1) + ")", choices[i]        
-    k = int(getch())
+        print str(i + 1) + ")", choices[i]        
+    k = int(getch()) - 1
     print choices[k]
     return k 
 
@@ -113,12 +152,10 @@ def RunMenu(menu):
             if callable(menu[m]):
                 print  m + ") " + menu[m].func_name
             elif type(menu[m]) is dict:
-                print  m + ") " + menu[m]["!"]
-                # RunMenu(m[1])
+                print  m + ") " + menu[m]["!"]                
         print( "0) Exit")        
         k = getch()
-        if k == '0':
-            # print("Exit")
+        if k == '0':            
             return
         print
         if type(menu[k]) is dict:
@@ -136,18 +173,20 @@ PoseMenu = {
 MotorMenu = {
     '!' : "Motor",
     'e' : SetEsc,
+    'm' : MotorMax,
     's' : M1Sweep
     }
 
 MainMenu = {
     '!' : "Main",
-    's' : OpenSerial,
+    '1' : OpenSerial,
     't' : Test1,
     'p' : PoseMenu,
+    'i' : Pid1,
     'm' : MotorMenu,
     'h' : Heartbeat,
     'g' : SendGeom,
-    'x' : CloseSerial,
+    '9' : CloseSerial,
     }
 
 
@@ -157,4 +196,5 @@ RunMenu(MainMenu)
 closing = True
 if Serial.isOpen():
     Serial.close()
+print "\nBye\n"
 
