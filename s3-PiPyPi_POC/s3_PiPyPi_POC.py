@@ -1,9 +1,12 @@
-from colorama import Fore, Back, Style, init
 from threading import Thread
+import os
+import inspect, re
 import serial, time, json
 
-Serial = serial.Serial("/dev/ttyUSB0", 115200)	# *nix
-#Serial = serial.Serial("com4", 115200)		# windows
+if os.name == "posix":
+    Serial = serial.Serial("/dev/ttyUSB0", 115200)	# *nix
+else:
+    Serial = serial.Serial("com4", 115200)		# windows
 
 closing = False
 
@@ -29,6 +32,12 @@ def _find_getch():
 
     return _getch
 
+def varname(p):
+  for line in inspect.getframeinfo(inspect.currentframe().f_back)[3]:
+    m = re.search(r'\bvarname\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)', line)
+    if m:
+      return m.group(1)
+
 def ReadSerial():
     while Serial.isOpen() and not closing:
         print(Serial.readline())
@@ -49,6 +58,18 @@ def Test1():
     #print j
     Serial.write(j + "\n")
 
+def Heartbeat():
+    i = GetChoice([ "On 500", "On 1000", "Off" ])
+    if i == 1:
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "HB" : 1, "Int" : 500} )
+    elif i == 2:
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "HB" : 1, "Int" : 500} )
+    else:
+        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "HB" : 0} )
+
+    print j
+    Serial.write(j + "\n")
+
 def SendGeom():
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Geom", "WheelBase" : 140.00, "TicksPerRevo" : 60, "WheelBase" : 120})
     #print j
@@ -56,13 +77,13 @@ def SendGeom():
     
 def SetPose():
     j = ""
-    c = int(Choice(["Off", "On"])) - 1
+    c = OnOff()
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Pose", "Value" : c})
     Serial.write(j + "\n")
     
 def SetEsc():
     j = ""
-    c = int(Choice(["Off", "On"])) - 1
+    c = OnOff()
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : c})
     # print j
     Serial.write(j + "\n")
@@ -78,56 +99,61 @@ def M1Sweep():
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 0})
     Serial.write(j + "\n")
 
-def Choice(a):
-    for i in xrange(len(a)):
-        print str(i+1) + ")", a[i]        
-    k = getch()
-    print(Fore.WHITE + Back.BLUE + a[int(k)-1] + Fore.RESET + Back.RESET)
-    return k
+def GetChoice(choices):
+    for i in xrange(len(choices)):
+        print str(i+1) + ")", choices[i]        
+    k = int(getch())
+    print choices[k]
+    return k 
 
 def RunMenu(menu):
+    print(">> " + menu['!'])
     while True:
         for m in sorted(menu):
-            print m + ")", menu[m].func_name
+            if callable(menu[m]):
+                print  m + ") " + menu[m].func_name
+            elif type(menu[m]) is dict:
+                print  m + ") " + menu[m]["!"]
+                # RunMenu(m[1])
         print( "0) Exit")        
         k = getch()
         if k == '0':
-            print(Fore.WHITE + Back.YELLOW + "Exit" + Fore.RESET + Back.RESET)
+            # print("Exit")
             return
         print
-        print(Fore.WHITE + Back.GREEN + MainMenuMenu[k].func_name + Fore.RESET + Back.RESET)
-        menu[k]()
+        if type(menu[k]) is dict:
+            RunMenu(menu[k])
+        else:
+            menu[k]()
         print
 
-def PoseMenu():
-    RunMenu(PoseMenuMenu)
 
-def MotorMenu():
-    RunMenu(MotorMenuMenu);
-
-PoseMenuMenu = {
-    '1' : SetPose,
+PoseMenu = {
+    '!' : "Pose",
+    's' : SetPose,
     }
 
-MotorMenuMenu = {
-    '1' : SetEsc,
-    '3' : M1Sweep
+MotorMenu = {
+    '!' : "Motor",
+    'e' : SetEsc,
+    's' : M1Sweep
     }
 
-MainMenuMenu = {
-    '1' : OpenSerial,
-    '2' : Test1,
-    '3' : PoseMenu,
-    '4' : MotorMenu,
-    '7' : SendGeom,
-    '9' : CloseSerial,
+MainMenu = {
+    '!' : "Main",
+    's' : OpenSerial,
+    't' : Test1,
+    'p' : PoseMenu,
+    'm' : MotorMenu,
+    'h' : Heartbeat,
+    'g' : SendGeom,
+    'x' : CloseSerial,
     }
 
 
 getch = _find_getch()
-init()  # colorama
-print(Fore.WHITE + Back.GREEN + "Python Pilot Test Suite .1" + Fore.RESET + Back.RESET + Style.RESET_ALL)
-RunMenu(MainMenuMenu)
+print("Python Pilot Test Suite .1")
+RunMenu(MainMenu)
 closing = True
 if Serial.isOpen():
     Serial.close()
