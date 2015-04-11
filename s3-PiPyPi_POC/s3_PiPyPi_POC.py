@@ -96,9 +96,9 @@ def SendGeom():
     printj(j)
     Serial.write(j + "\n")
     
-def SetPose():
-    #j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Pose", "Value" : c})
-    #Serial.write(j + "\n")
+def ResetPose():
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Reset"})
+    Serial.write(j + "\n")
     pass
     
 def SetEsc():
@@ -158,16 +158,17 @@ def RunMenu(menu):
         if k == '0':            
             return
         print
-        if type(menu[k]) is dict:
-            RunMenu(menu[k])
-        else:
-            menu[k]()
-        print
-
+        if menu.has_key(k):
+            if type(menu[k]) is dict:
+                RunMenu(menu[k])
+            else:
+                if callable(menu[k]):
+                    print menu[k].func_name
+                    menu[k]()
 
 PoseMenu = {
     '!' : "Pose",
-    's' : SetPose,
+    'r' : ResetPose,
     }
 
 MotorMenu = {
@@ -180,13 +181,13 @@ MotorMenu = {
 MainMenu = {
     '!' : "Main",
     '1' : OpenSerial,
+    '9' : CloseSerial,
     't' : Test1,
     'p' : PoseMenu,
     'i' : Pid1,
     'm' : MotorMenu,
     'h' : Heartbeat,
     'g' : SendGeom,
-    '9' : CloseSerial,
     }
 
 
