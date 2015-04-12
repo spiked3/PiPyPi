@@ -113,25 +113,30 @@ def SetEsc():
     
 def M1Sweep():
     # enable esc
+    st = .5
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 1})
     Serial.write(j + "\n")
-    for p in xrange(0,100,10):
+    for p in xrange(0,101,10):
         j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : p})
         printj(j)
         Serial.write(j + "\n")
-        time.sleep(.1)
+        time.sleep(st)
 
-    for p in xrange(100,-100,-10):
+    time.sleep(2);
+
+    for p in xrange(100,-101,-10):
         j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : p})
         printj(j)
         Serial.write(j + "\n")
-        time.sleep(.1)
+        time.sleep(st)
+
+    time.sleep(2);
 
     for p in xrange(-100,0,10):
         j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : p})
         printj(j)
         Serial.write(j + "\n")
-        time.sleep(.1)
+        time.sleep(st)
 
     # disable esc
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 0})
