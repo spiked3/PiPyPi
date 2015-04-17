@@ -1,5 +1,5 @@
 #!/bin/bash
-cd s3-PiPyPi_POC
-python s3_PiPyPi_POC.py
+cd p3
+python p3.py
 
 

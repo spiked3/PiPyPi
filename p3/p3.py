@@ -6,8 +6,8 @@ import serial, time, json
 if os.name == "posix":
     Serial = serial.Serial("/dev/ttyUSB0", 115200)	# *nix
 else:
-    Serial = serial.Serial("com4", 115200, rtscts=0)		# windows->ard
-#    Serial = serial.Serial("com13", 115200)		# windows->ftdi
+    Serial = serial.Serial("com3", 115200, rtscts=0)		# windows->ard
+#    Serial = serial.Serial("com3", 115200)		        # windows->ftdi
 
 closing = False
 
@@ -46,7 +46,7 @@ def OpenSerial():
 def CloseSerial():
     if Serial.isOpen():
         Serial.close()
-    Thread(target=ReadSerial)._Thread__stop()
+        Thread(target=ReadSerial)._Thread__stop()
 
 def printj(j):
     print "com<-" + str(j)
@@ -55,6 +55,11 @@ def Test1():
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Test1"} )
     printj(j)
     Serial.write(j + "\n")
+
+    # +++ not working!
+    #j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Reset", "H" : 90})
+    #printj(j)
+    #Serial.write(j + "\n")
 
 def Heartbeat():
     print "Heartbeat"
@@ -99,7 +104,6 @@ def SendGeom():
 def ResetPose():
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Reset"})
     Serial.write(j + "\n")
-    pass
     
 def SetEsc():
     i = GetChoice([ "On", "Off" ])
@@ -132,7 +136,7 @@ def M1Sweep():
 
     time.sleep(2);
 
-    for p in xrange(-100,0,10):
+    for p in xrange(-100,1,10):
         j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : p})
         printj(j)
         Serial.write(j + "\n")
@@ -201,6 +205,7 @@ print("Python Pilot Test Suite .1")
 RunMenu(MainMenu)
 closing = True
 if Serial.isOpen():
-    Serial.close()
+    CloseSerial()
 print "\nBye\n"
+
 
