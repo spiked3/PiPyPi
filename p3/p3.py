@@ -52,9 +52,21 @@ def printj(j):
     print "com<-" + str(j)
 
 def Test1():
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Test1"} )
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 1})
     printj(j)
-    Serial.write(j + "\n")
+    Serial.write(j + "\r\n")
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : 40})
+    printj(j)
+    Serial.write(j + "\r\n")
+
+    time.sleep(2)
+
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : 0})
+    printj(j)
+    Serial.write(j + "\r\n")
+    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 0})
+    printj(j)    
+    Serial.write(j + "\r\n")
 
     # +++ not working!
     #j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Reset", "H" : 90})
@@ -83,7 +95,7 @@ def Pid1():
     j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "PID1",
                     "P" :  123.456, "I" :  123.456, "D" :  123.456 })
     printj(j)
-    Serial.write(j + "\n")
+    Serial.write(j + "\r\n")
 
 def MotorMax():
     print "MotorMax"
