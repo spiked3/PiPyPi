@@ -4,7 +4,10 @@ import inspect, re
 import serial, time, json
 
 if os.name == "posix":
-    Serial = serial.Serial("/dev/ttyUSB0", 115200)	# *nix
+    try:
+        Serial = serial.Serial("/dev/ttyUSB0", 115200, timeout=0.1)	# *nix
+    except:
+        Serial = serial.Serial("/dev/ttyACM0", 115200, timeout=0.1)	# *pi
 else:
     Serial = serial.Serial("com3", 115200, rtscts=0)		# windows->ard
 #    Serial = serial.Serial("com3", 115200)		        # windows->ftdi
@@ -35,7 +38,9 @@ def _find_getch():
 
 def ReadSerial():
     while Serial.isOpen() and not closing:
-        print "com->" + Serial.readline(),
+        line = Serial.readline()
+        if line:
+            print "\r\ncom->" + line.strip()
 
 def OpenSerial():
     if Serial.isOpen():
@@ -216,8 +221,7 @@ getch = _find_getch()
 print("Python Pilot Test Suite .1")
 RunMenu(MainMenu)
 closing = True
-if Serial.isOpen():
-    CloseSerial()
+CloseSerial()
 print "\nBye\n"
 
 
