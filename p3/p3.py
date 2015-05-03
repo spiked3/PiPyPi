@@ -57,24 +57,24 @@ def printj(j):
     print "com<-" + str(j)
 
 def Test1():
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 1})
+    j = json.dumps({"Cmd" : "Esc", "Value" : 1})
     printj(j)
     Serial.write(j + "\r\n")
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : 40})
+    j = json.dumps({"Cmd" : "Power", "Value" : 40})
     printj(j)
     Serial.write(j + "\r\n")
 
     time.sleep(2)
 
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : 0})
+    j = json.dumps({"Cmd" : "Power", "Value" : 0})
     printj(j)
     Serial.write(j + "\r\n")
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 0})
+    j = json.dumps({"Cmd" : "Esc", "Value" : 0})
     printj(j)    
     Serial.write(j + "\r\n")
 
     # +++ not working!
-    #j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Reset", "H" : 90})
+    #j = json.dumps({"Cmd" : "Reset", "H" : 90})
     #printj(j)
     #Serial.write(j + "\n")
 
@@ -82,22 +82,22 @@ def Heartbeat():
     print "Heartbeat"
     i = GetChoice([  "Off", "On 500", "On 1000", "On 5000", "On 20000" ])
     if i == 1:
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Heartbeat", "Value" :  1, "Int" : 500} )
+        j = json.dumps({"Cmd" : "Heartbeat", "Value" :  1, "Int" : 500} )
     elif i == 2:
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Heartbeat", "Value" :  1, "Int" : 1000} )
+        j = json.dumps({"Cmd" : "Heartbeat", "Value" :  1, "Int" : 1000} )
     elif i == 3:
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Heartbeat", "Value" :  1, "Int" : 5000} )
+        j = json.dumps({"Cmd" : "Heartbeat", "Value" :  1, "Int" : 5000} )
     elif i == 4:
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Heartbeat", "Value" :  1, "Int" : 20000} )
+        j = json.dumps({"Cmd" : "Heartbeat", "Value" :  1, "Int" : 20000} )
     else:
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Heartbeat", "Value" :  0} )
+        j = json.dumps({"Cmd" : "Heartbeat", "Value" :  0} )
 
     printj(j)
     Serial.write(j + "\n")
 
 def Pid1():
     print "PID1"
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "PID1",
+    j = json.dumps({"Cmd" : "PID1",
                     "P" :  123.456, "I" :  123.456, "D" :  123.456 })
     printj(j)
     Serial.write(j + "\r\n")
@@ -109,17 +109,17 @@ def MotorMax():
         p = 100
     else:
         p = (c + 1) * 20
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "MMax", "Value" : p })
+    j = json.dumps({"Cmd" : "MMax", "Value" : p })
     printj(j)
     Serial.write(j + "\n")
 
 def SendGeom():
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Geom", "WB" : 140.00, "TPR" : 60, "WD" : 120.00})
+    j = json.dumps({"Cmd" : "Geom", "WB" : 140.00, "TPR" : 60, "WD" : 120.00})
     printj(j)
     Serial.write(j + "\n")
     
 def ResetPose():
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Reset"})
+    j = json.dumps({"Cmd" : "Reset"})
     Serial.write(j + "\n")
     
 def SetEsc():
@@ -128,17 +128,17 @@ def SetEsc():
         o = 1
     else:
         o = 0
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : o})
+    j = json.dumps({"Cmd" : "Esc", "Value" : o})
     printj(j)
     Serial.write(j + "\n")
     
 def M1Sweep():
     # enable esc
     st = .5
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 1})
+    j = json.dumps({"Cmd" : "Esc", "Value" : 1})
     Serial.write(j + "\n")
     for p in xrange(0,101,10):
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : p})
+        j = json.dumps({"Cmd" : "Power", "Value" : p})
         printj(j)
         Serial.write(j + "\n")
         time.sleep(st)
@@ -146,7 +146,7 @@ def M1Sweep():
     time.sleep(2);
 
     for p in xrange(100,-101,-10):
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : p})
+        j = json.dumps({"Cmd" : "Power", "Value" : p})
         printj(j)
         Serial.write(j + "\n")
         time.sleep(st)
@@ -154,13 +154,13 @@ def M1Sweep():
     time.sleep(2);
 
     for p in xrange(-100,1,10):
-        j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Power", "Value" : p})
+        j = json.dumps({"Cmd" : "Power", "Value" : p})
         printj(j)
         Serial.write(j + "\n")
         time.sleep(st)
 
     # disable esc
-    j = json.dumps({"Topic" : "Cmd/robot1", "T" : "Cmd", "Cmd" : "Esc", "Value" : 0})
+    j = json.dumps({"Cmd" : "Esc", "Value" : 0})
     printj(j)
     Serial.write(j + "\n")
 
