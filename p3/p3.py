@@ -1,7 +1,9 @@
-from threading import Thread
+﻿from threading import Thread
 import os
 import inspect, re
 import serial, time, json
+
+# long overdue updates to get back in sync
 
 Serial = None
 closing = False
@@ -32,7 +34,7 @@ def ReadSerial():
     while Serial.isOpen() and not closing:
         line = Serial.readline()
         if line:
-            print "com->" + line.strip() + "\r\n"
+            print "com->" + line.strip()
 
 def OpenSerial():
     global Serial
@@ -63,20 +65,13 @@ def CloseSerial():
 
 #---------------------------------------------   
 
-def Heartbeat():
-    print "Heartbeat"
-    i = GetChoice([  "Off", "On 500", "On 2000" ])
-    if i == 1:
-        SendPilot({"Cmd" : "Heartbeat", "Value" :  1, "Int" : 500} )
-    elif i == 2:
-        SendPilot({"Cmd" : "Heartbeat", "Value" :  1, "Int" : 2000} )
-    else:
-        SendPilot({"Cmd" : "Heartbeat", "Value" :  0, "Int" : 2000} )
-
-    
 def ResetPose():
-    SendPilot({"Cmd" : "Reset"})
+    SendPilot({"Cmd" : "RESET"})
 
+def SendConfig():
+#   Pilot.Send(new { Cmd = "CONFIG", Geom = new float[] { 336.2F,  450 } });
+
+    SendPilot({"Cmd" : "CONFIG", "Geom" : [ 336.2,  450.0] })
     
 def SetEsc():
     i = GetChoice([ "On", "Off" ])
@@ -84,7 +79,13 @@ def SetEsc():
         o = 1
     else:
         o = 0
-    SendPilot({"Cmd" : "Esc", "Value" : o})
+    SendPilot({"Cmd" : "ESC", "Value" : o})
+
+def DistanceTest():
+    SendPilot({"Cmd" : "PWR", "Dist" : 2.0, "M1" : 40.0, "M2" : 40.0 })
+    
+def MotorStop():
+    SendPilot({"Cmd" : "PWR", "M1" : 0, "M2" : 0 })
     
 #------------------------------------------------------
 
@@ -103,9 +104,9 @@ def RunMenu(menu):
                 print  m + ") " + menu[m].func_name
             elif type(menu[m]) is dict:
                 print  m + ") " + menu[m]["!"]                
-        print( "0) Exit")        
+        print( "z) Exit")        
         k = getch()
-        if k == '0':            
+        if k == 'z' or k == 'Z':            
             return
         print
         if menu.has_key(k):
@@ -116,27 +117,24 @@ def RunMenu(menu):
                     print menu[k].func_name
                     menu[k]()
 
-PoseMenu = {
-    '!' : "Pose",
-    'r' : ResetPose,
-    }
-
 MotorMenu = {
     '!' : "Motor",
+    'x' : MotorStop,
     'e' : SetEsc,
+    'd' : DistanceTest,
     }
 
 MainMenu = {
     '!' : "Main",
     '1' : OpenSerial,
     '9' : CloseSerial,
-    'p' : PoseMenu,
+    'c' : SendConfig,
+    'r' : ResetPose,
     'm' : MotorMenu,
-    'h' : Heartbeat,
     }
 
 getch = _find_getch()
-print("Python Pilot Test Suite .2")
+print("Python Pilot Test Suite .3")
 RunMenu(MainMenu)
 closing = True
 CloseSerial()
